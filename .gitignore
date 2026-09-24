@@ -1,0 +1,24 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Vector store — rebuild with: python src/ingest.py
+chroma_db/
+
+# Runtime state
+data/query_cache.json*
+data/answer_library.json
+
+# Raw eval transcripts
+*_Answers.txt
+
+# Editors / tooling
+.idea/
+.claude/
+~$*

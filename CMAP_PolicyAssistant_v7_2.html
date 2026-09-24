@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LifeX Policy Assistant</title>
+<style>
+:root {
+  --navy:#0F1F3D; --navy2:#162947;
+  --ink:#1A2332; --ink2:#3D4F63; --ink3:#7A8A9A;
+  --rule:#E4E8EE; --rule2:#CDD3DC;
+  --bg:#F5F7FA; --surf:#FFFFFF;
+  --blue:#1A56DB; --blue2:#1044B0; --blue-lt:#EBF2FF;
+  --grn:#0A6E40; --grn-lt:#D6F5E3;
+  --amb:#92400E; --amb-lt:#FEF3C7;
+  --red:#991B1B; --red-lt:#FEE2E2;
+  --lifex:#7B2FBE; --lifex2:#6A1FA8; --lifex-lt:#F3E8FF;
+  --r:10px; --r-sm:6px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.1),0 0 0 1px rgba(0,0,0,.05);
+  --sidebar:224px;
+  --angle-c:#9B0060; --angle-lt:#F9E0F2;
+  --bfs-c:#0D4A8A; --bfs-lt:#E0EDFB;
+  --cfal-c:#4A1878; --cfal-lt:#EDE4F8;
+  --flexi-c:#B84000; --flexi-lt:#FDEEE4;
+  --metro-c:#0D4DA8; --metro-lt:#E0EDFB;
+  --res-c:#0A5870; --res-lt:#DDF0F6;
+  --wbc-c:#A00E0E; --wbc-lt:#FCE4E4;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',sans-serif;background:var(--bg);color:var(--ink);font-size:13px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.shell{display:flex;height:100vh;overflow:hidden}
+
+/* ── Sidebar ── */
+.sidebar{width:var(--sidebar);min-width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;overflow:hidden;transition:width .2s ease,min-width .2s ease}
+.sidebar.collapsed{width:0;min-width:0}
+.sidebar-brand{padding:16px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.brand-logo{display:flex;align-items:center;gap:9px;margin-bottom:8px}
+.brand-mark{width:32px;height:32px;border-radius:8px;flex-shrink:0;background:linear-gradient(135deg,var(--lifex),#A855F7);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(123,47,190,.4)}
+.brand-wordmark{display:flex;flex-direction:column;gap:0}
+.brand-lifex{font-size:16px;font-weight:800;color:#fff;letter-spacing:-.03em;line-height:1}
+.brand-x-accent{color:#A855F7}
+.brand-subtitle{font-size:9.5px;font-weight:500;color:rgba(255,255,255,.35);letter-spacing:.02em;margin-top:1px}
+.brand-divider{height:1px;background:linear-gradient(to right,rgba(123,47,190,.5),transparent);margin-top:2px}
+.brand-tag{display:flex;align-items:center;gap:5px;margin-top:8px}
+.brand-tag-pill{font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;background:rgba(168,85,247,.15);color:#C084FC;border:1px solid rgba(168,85,247,.2)}
+.nav{flex:1;padding:8px 0;overflow-y:auto}
+.nav::-webkit-scrollbar{display:none}
+.nav-section{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.2);padding:10px 16px 4px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 16px;font-size:12.5px;cursor:pointer;color:rgba(255,255,255,.45);border-left:2px solid transparent;transition:color .12s,background .12s;user-select:none;white-space:nowrap}
+.nav-item:hover{color:rgba(255,255,255,.8);background:rgba(255,255,255,.05)}
+.nav-item.active{color:#fff;background:rgba(168,85,247,.12);border-left-color:#A855F7;font-weight:500}
+.nav-icon{width:14px;height:14px;flex-shrink:0;opacity:.55}
+.nav-item.active .nav-icon{opacity:1}
+.nav-badge{margin-left:auto;font-size:9px;font-weight:700;background:#A855F7;color:#fff;padding:1px 6px;border-radius:20px;min-width:18px;text-align:center;transition:transform .2s}
+.nav-badge.rev{background:#F59E0B}
+.nav-badge.pulse{animation:badgepulse .5s ease}
+@keyframes badgepulse{0%{transform:scale(1)}50%{transform:scale(1.4)}100%{transform:scale(1)}}
+.sidebar-foot{padding:12px 16px 14px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.status-row{display:flex;align-items:center;gap:6px;font-size:10px;color:rgba(255,255,255,.3);margin-bottom:4px}
+.status-dot{width:6px;height:6px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 2px rgba(74,222,128,.15);flex-shrink:0}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+.panel{display:none;flex-direction:column;flex:1;overflow:hidden}
+.panel.active{display:flex}
+
+/* ── Topbar ── */
+/* Brand topbar — LifeX centred above filter bar */
+.brand-topbar{
+  background:var(--navy);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  height:44px;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;flex-shrink:0;
+}
+.brand-topbar-center{display:flex;align-items:center;gap:8px}
+.brand-mark-top{
+  width:24px;height:24px;border-radius:6px;
+  background:linear-gradient(135deg,var(--lifex),#A855F7);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(123,47,190,.35);flex-shrink:0;
+}
+.brand-topbar-name{
+  font-size:15px;font-weight:800;color:#fff;
+  letter-spacing:-.03em;line-height:1;
+}
+.brand-topbar-sep{font-size:12px;color:rgba(255,255,255,.2);line-height:1}
+.brand-topbar-sub{font-size:11px;font-weight:500;color:rgba(255,255,255,.4);letter-spacing:.01em}
+
+.topbar{background:var(--surf);border-bottom:1px solid var(--rule);padding:0 16px;height:44px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hamburger{background:none;border:none;cursor:pointer;padding:6px;border-radius:var(--r-sm);color:rgba(255,255,255,.5);display:flex;align-items:center;transition:background .12s,color .12s;flex-shrink:0}
+.hamburger:hover{background:rgba(255,255,255,.08);color:#fff}
+.topbar-title{font-size:13px;font-weight:600;color:var(--ink)}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.new-chat-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;font-size:11.5px;font-weight:500;border-radius:var(--r-sm);border:1.5px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.new-chat-btn:hover{border-color:var(--lifex);color:var(--lifex);background:var(--lifex-lt)}
+.new-chat-btn svg{width:12px;height:12px;flex-shrink:0}
+
+/* ── Filter bar ── */
+/* ── Lender filter — responsive ── */
+.filter-bar{background:var(--surf);border-bottom:1px solid var(--rule);padding:8px 16px;display:flex;align-items:center;gap:5px;flex-shrink:0;overflow-x:auto}
+.filter-bar::-webkit-scrollbar{display:none}
+.filter-label{font-size:10px;font-weight:600;color:var(--ink3);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;margin-right:3px}
+.lender-pill{display:flex;align-items:center;gap:5px;padding:4px 11px;font-size:11.5px;font-weight:500;border-radius:20px;border:1.5px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;white-space:nowrap;transition:all .12s;flex-shrink:0}
+.lender-pill:hover{border-color:var(--lifex);color:var(--lifex)}
+.lender-pill.active{color:#fff;border-color:transparent}
+.lender-pill[data-l="ALL"].active{background:var(--navy)}
+.lender-pill[data-l="Angle Finance"].active{background:var(--angle-c)}
+.lender-pill[data-l="BFS"].active{background:var(--bfs-c)}
+.lender-pill[data-l="Capital Finance"].active{background:var(--cfal-c)}
+.lender-pill[data-l="flexicommercial"].active{background:var(--flexi-c)}
+.lender-pill[data-l="Metro Finance"].active{background:var(--metro-c)}
+.lender-pill[data-l="Resimac"].active{background:var(--res-c)}
+.lender-pill[data-l="Westpac"].active{background:var(--wbc-c)}
+.pill-dot{width:6px;height:6px;border-radius:50%}
+
+/* Compact dropdown — hidden on wide screens */
+.lender-dropdown-wrap{display:none!important;align-items:center;gap:8px}
+.lender-dropdown{
+  padding:6px 10px;font-size:12.5px;font-weight:500;
+  border:1.5px solid var(--rule2);border-radius:var(--r-sm);
+  background:var(--surf);color:var(--ink);
+  outline:none;cursor:pointer;
+  transition:border-color .15s;
+  min-width:160px;
+}
+.lender-dropdown:focus{border-color:var(--lifex);box-shadow:0 0 0 3px rgba(123,47,190,.08)}
+.lender-dot-active{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* Switch at 1000px — catches split screen earlier */
+@media(max-width:1000px){
+  .lender-pills-wrap{display:none!important}
+  .lender-dropdown-wrap{display:flex!important}
+}
+
+/* ── Chat ── */
+.chat-scroll{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.chat-scroll::-webkit-scrollbar{width:4px}
+.chat-scroll::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+
+/* Welcome */
+.welcome{align-self:center;max-width:500px;width:100%;margin:auto;padding:20px 0;text-align:center}
+.welcome-icon{width:48px;height:48px;background:linear-gradient(135deg,var(--lifex),#A855F7);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 4px 16px rgba(123,47,190,.25)}
+.welcome-brand{font-size:11px;font-weight:700;color:var(--lifex);letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.welcome-title{font-size:20px;font-weight:700;color:var(--ink);letter-spacing:-.03em;margin-bottom:8px}
+.welcome-sub{font-size:12.5px;color:var(--ink3);line-height:1.65;margin-bottom:24px}
+.welcome-examples{display:flex;flex-direction:column;gap:7px;text-align:left}
+.welcome-ex{background:var(--surf);border:1.5px solid var(--rule);border-radius:var(--r);padding:10px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:flex-start;gap:10px}
+.welcome-ex:hover{border-color:var(--lifex);box-shadow:0 0 0 3px rgba(123,47,190,.06)}
+.ex-lender{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.ex-q{font-size:12.5px;color:var(--ink);line-height:1.5}
+
+/* ── Messages — no avatars ── */
+.msg{display:flex;max-width:86%}
+.msg.user{align-self:flex-end;justify-content:flex-end}
+.msg.ai{align-self:flex-start}
+.msg-wrap{display:flex;flex-direction:column;gap:5px;width:100%}
+@media(max-width:900px){.msg{max-width:96%}}
+
+/* User bubble */
+.bubble-user{
+  padding:10px 14px;
+  border-radius:var(--r);
+  border-bottom-right-radius:3px;
+  font-size:13px;line-height:1.6;
+  background:var(--blue);color:#EBF2FF;
+  align-self:flex-end;
+  max-width:100%;
+}
+
+/* AI answer card — structured, professional */
+.answer-card{
+  background:var(--surf);
+  border:1px solid var(--rule);
+  border-radius:var(--r);
+  border-bottom-left-radius:3px;
+  box-shadow:var(--sh);
+  overflow:hidden;
+}
+
+/* Answer card header — lender strip */
+.answer-header{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px;
+  border-bottom:1px solid var(--rule);
+  background:var(--bg);
+}
+.answer-lender-tag{
+  font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:4px;
+  border:1px solid rgba(0,0,0,.06);
+}
+.answer-from-lib{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:600;
+  color:var(--grn);background:var(--grn-lt);
+  padding:2px 8px;border-radius:4px;
+  margin-left:auto;
+}
+
+/* Answer body */
+.answer-body{padding:14px 16px;font-size:13px;color:var(--ink);line-height:1.7}
+
+/* Structured answer elements */
+.ans-section{margin-bottom:14px}
+.ans-section:last-child{margin-bottom:0}
+.ans-section-title{
+  font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.07em;
+  color:var(--ink3);
+  margin-bottom:6px;
+  padding-bottom:4px;
+  border-bottom:1px solid var(--rule);
+}
+.ans-para{font-size:13px;color:var(--ink);line-height:1.75;margin-bottom:6px}
+.ans-para:last-child{margin-bottom:0}
+.ans-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.ans-list li{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:12.5px;color:var(--ink2);line-height:1.6;
+}
+.ans-list li::before{
+  content:'';width:5px;height:5px;border-radius:50%;
+  background:var(--lifex);flex-shrink:0;margin-top:7px;
+}
+.ans-kv{display:flex;flex-direction:column;gap:4px}
+.ans-kv-row{
+  display:flex;align-items:baseline;gap:0;
+  font-size:12.5px;padding:5px 0;
+  border-bottom:1px solid var(--rule);
+}
+.ans-kv-row:last-child{border-bottom:none}
+.ans-kv-key{font-weight:600;color:var(--ink);min-width:140px;flex-shrink:0;font-size:12px}
+.ans-kv-val{color:var(--ink2);flex:1}
+.ans-highlight{
+  background:var(--lifex-lt);border:1px solid rgba(123,47,190,.12);
+  border-radius:var(--r-sm);padding:8px 12px;
+  font-size:12.5px;color:var(--ink);line-height:1.65;
+  margin:8px 0;
+}
+.ans-highlight strong{color:var(--lifex)}
+.ans-warning{
+  background:var(--amb-lt);border:1px solid rgba(146,64,14,.15);
+  border-radius:var(--r-sm);padding:8px 12px;
+  font-size:12px;color:var(--amb);line-height:1.6;
+  margin:8px 0;display:flex;align-items:flex-start;gap:7px;
+}
+
+/* Source footer */
+.answer-footer{
+  padding:8px 14px;
+  border-top:1px solid var(--rule);
+  background:var(--bg);
+  display:flex;align-items:center;gap:6px;
+  flex-wrap:wrap;
+}
+.source-label{font-size:9.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em}
+.src-chip{font-size:11px;padding:2px 8px;border-radius:4px;font-weight:500;border:1px solid rgba(0,0,0,.06)}
+.src-chip-toggle{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:3px;background:var(--bg);color:var(--ink3)}
+.src-chip-toggle:hover{background:var(--rule)}
+.src-chip-toggle svg{width:9px;height:9px;transition:transform .15s}
+.src-chip-toggle.open svg{transform:rotate(180deg)}
+.src-expand{display:none;width:100%;padding:8px 14px 10px;border-top:1px solid var(--rule);background:var(--bg)}
+.src-expand.open{display:block}
+.src-expand-group{margin-bottom:6px}
+.src-expand-group:last-child{margin-bottom:0}
+.src-expand-lender{font-size:9.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.src-expand-chips{display:flex;flex-wrap:wrap;gap:4px}
+
+/* Typing */
+.typing-wrap{padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.typing{display:flex;gap:4px;align-items:center}
+.tdot{width:5px;height:5px;border-radius:50%;background:var(--ink3);animation:pulse 1.3s ease-in-out infinite}
+.tdot:nth-child(2){animation-delay:.2s}.tdot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.typing-status{font-size:11px;color:var(--ink3)}
+
+/* Input */
+.input-wrap{border-top:1px solid var(--rule);background:var(--surf);padding:12px 16px;flex-shrink:0}
+.input-row{display:flex;gap:8px;align-items:flex-end}
+textarea#qa-in{flex:1;padding:9px 12px;border:1.5px solid var(--rule2);border-radius:var(--r);font-size:13px;font-family:inherit;color:var(--ink);background:var(--bg);outline:none;resize:none;height:40px;max-height:120px;line-height:1.5;transition:border-color .15s,box-shadow .15s}
+textarea#qa-in:focus{border-color:var(--lifex);background:#fff;box-shadow:0 0 0 3px rgba(123,47,190,.08)}
+textarea#qa-in::placeholder{color:var(--ink3)}
+.send-btn{width:38px;height:38px;border-radius:var(--r-sm);border:none;background:var(--lifex);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .12s,transform .1s;align-self:flex-end}
+.send-btn:hover{background:var(--lifex2)}
+.send-btn:active{transform:scale(.95)}
+.send-btn:disabled{background:var(--rule2);cursor:not-allowed}
+.input-hint{font-size:10px;color:var(--ink3);margin-top:6px;text-align:center}
+
+/* ── Library ── */
+.lib-controls{background:var(--surf);border-bottom:1px solid var(--rule);padding:10px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.search-wrap{position:relative;flex:1}
+.search-wrap svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--ink3);pointer-events:none}
+.search-input{width:100%;padding:7px 10px 7px 30px;border:1.5px solid var(--rule2);border-radius:var(--r-sm);font-size:12.5px;color:var(--ink);background:var(--bg);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:var(--lifex);background:#fff}
+.toggle-pill{padding:5px 11px;font-size:11.5px;font-weight:500;cursor:pointer;border:1.5px solid var(--rule2);border-radius:20px;background:var(--surf);color:var(--ink2);transition:all .12s;white-space:nowrap}
+.toggle-pill:hover{border-color:var(--lifex);color:var(--lifex)}
+.toggle-pill.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.lib-scroll{flex:1;overflow-y:auto}
+.lib-scroll::-webkit-scrollbar{width:4px}
+.lib-scroll::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+.lib-row{padding:12px 16px;border-bottom:1px solid var(--rule);display:flex;gap:11px;cursor:pointer;transition:background .1s}
+.lib-row:hover{background:var(--bg)}
+.lib-row.expanded{background:var(--lifex-lt);border-left:3px solid var(--lifex)}
+.lib-ldot{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px}
+.lib-main{flex:1;min-width:0}
+.lib-q{font-size:12.5px;font-weight:500;color:var(--ink);margin-bottom:3px}
+.lib-a{font-size:11.5px;color:var(--ink2);line-height:1.5}
+.lib-a.clamped{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.lib-expand{font-size:11px;color:var(--lifex);cursor:pointer;margin-top:4px;display:inline-block}
+.lib-expand:hover{text-decoration:underline}
+.lib-meta{display:flex;align-items:center;gap:5px;margin-top:6px;flex-wrap:wrap}
+.tag{font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500}
+.tag-cached{background:var(--grn-lt);color:var(--grn)}
+.tag-pending{background:var(--amb-lt);color:var(--amb)}
+.tag-section{background:var(--bg);color:var(--ink3);border:1px solid var(--rule)}
+.lib-ts{font-size:10px;color:var(--ink3);margin-left:auto;white-space:nowrap}
+.lib-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:12px}
+
+/* ── Review ── */
+.rev-scroll{flex:1;overflow-y:auto;padding-bottom:10px}
+.rev-card{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);margin:14px 16px;overflow:hidden;box-shadow:var(--sh)}
+.rev-head{padding:12px 16px 10px;border-bottom:1px solid var(--rule);display:flex;gap:10px;align-items:flex-start}
+.rev-q{font-size:12.5px;font-weight:500;flex:1}
+.rev-body{padding:12px 16px}
+.rev-lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.rev-answer{background:var(--bg);border:1px solid var(--rule);border-radius:var(--r-sm);padding:10px 12px;font-size:12px;line-height:1.65;color:var(--ink)}
+.rev-edit-ta{width:100%;min-height:80px;padding:9px 11px;border:1.5px solid var(--lifex);border-radius:var(--r-sm);font-size:12px;font-family:inherit;color:var(--ink);background:#fff;resize:vertical;outline:none;box-shadow:0 0 0 3px rgba(123,47,190,.08);line-height:1.65;display:none}
+.rev-foot{padding:10px 16px 13px;display:flex;align-items:center;gap:6px;background:var(--bg);border-top:1px solid var(--rule)}
+.rev-note{flex:1;padding:6px 9px;border:1.5px solid var(--rule2);border-radius:var(--r-sm);font-size:11.5px;font-family:inherit;color:var(--ink);background:#fff;outline:none;transition:border-color .15s}
+.rev-note:focus{border-color:var(--lifex)}
+.rev-note::placeholder{color:var(--ink3)}
+.rev-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:12px}
+.rev-empty svg{width:32px;height:32px;margin:0 auto 10px;display:block;opacity:.2}
+.btn{padding:5px 11px;font-size:11.5px;font-weight:500;border-radius:var(--r-sm);border:1.5px solid var(--rule2);background:var(--surf);color:var(--ink2);cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .12s;white-space:nowrap}
+.btn:hover{border-color:var(--lifex);color:var(--lifex)}
+.btn-approve{background:var(--grn);color:#fff;border-color:var(--grn)}
+.btn-approve:hover{background:#085C35;border-color:#085C35;color:#fff}
+.btn-reject{background:var(--red-lt);color:var(--red);border-color:rgba(153,27,27,.2)}
+.btn-reject:hover{background:var(--red);color:#fff;border-color:var(--red)}
+
+/* ── Costs ── */
+.cost-scroll{flex:1;overflow-y:auto;padding:20px}
+.cost-scroll::-webkit-scrollbar{width:4px}
+.cost-scroll::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
+.kpi{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh)}
+.kpi.hl{background:var(--grn-lt);border-color:rgba(10,110,64,.15)}
+.kpi-lbl{font-size:10px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.kpi-val{font-size:22px;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.kpi.hl .kpi-val{color:var(--grn)}
+.kpi-sub{font-size:10px;color:var(--ink3);margin-top:3px}
+.sec-hd{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 12px}
+.bar-wrap{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:16px;margin-bottom:20px;box-shadow:var(--sh)}
+.bar-r{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.bar-r:last-child{margin-bottom:0}
+.bar-lbl{font-size:11px;color:var(--ink2);width:80px;flex-shrink:0}
+.bar-track{flex:1;height:8px;background:var(--rule);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.bar-fill.g{background:var(--grn)}
+.bar-fill.a{background:#F59E0B}
+.bar-v{font-size:11px;font-weight:600;color:var(--ink2);width:24px;text-align:right}
+.log-wrap{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;box-shadow:var(--sh)}
+.log-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.log-table th{padding:9px 14px;background:var(--bg);text-align:left;font-weight:600;color:var(--ink3);font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--rule)}
+.log-table td{padding:9px 14px;border-bottom:1px solid var(--rule);color:var(--ink2);vertical-align:top}
+.log-table tr:last-child td{border-bottom:none}
+.badge-hit{font-size:10px;font-weight:600;color:var(--grn);background:var(--grn-lt);padding:1px 6px;border-radius:4px}
+.badge-api{font-size:10px;font-weight:600;color:var(--amb);background:var(--amb-lt);padding:1px 6px;border-radius:4px}
+
+/* ── Chunks (upload + auto-draft + promote) ── */
+.chunks-scroll{flex:1;overflow-y:auto;padding:20px}
+.chunks-scroll::-webkit-scrollbar{width:4px}
+.chunks-scroll::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+.upload-card{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);padding:18px 20px;box-shadow:var(--sh);max-width:620px}
+.upload-card h3{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.upload-card .sub{font-size:11.5px;color:var(--ink3);margin-bottom:16px;line-height:1.5}
+.upload-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.upload-field{display:flex;flex-direction:column;gap:5px}
+.upload-field label{font-size:10.5px;font-weight:600;color:var(--ink3);text-transform:uppercase;letter-spacing:.05em}
+.upload-select,.upload-file{padding:7px 10px;font-size:12.5px;border:1.5px solid var(--rule2);border-radius:var(--r-sm);background:var(--bg);color:var(--ink);outline:none;font-family:inherit}
+.upload-select:focus{border-color:var(--lifex)}
+.upload-file{background:var(--surf);cursor:pointer}
+.btn-draft{padding:8px 16px;font-size:12.5px;font-weight:600;border-radius:var(--r-sm);border:none;background:var(--lifex);color:#fff;cursor:pointer;transition:background .12s;display:inline-flex;align-items:center;gap:6px}
+.btn-draft:hover{background:var(--lifex2)}
+.btn-draft:disabled{background:var(--rule2);cursor:not-allowed}
+.upload-filename{font-size:11.5px;color:var(--ink2);margin-top:8px}
+.draft-progress{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:12px;color:var(--ink2)}
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid var(--rule2);border-top-color:var(--lifex);animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.draft-error{margin-top:14px;padding:10px 14px;background:var(--red-lt);color:var(--red);border-radius:var(--r-sm);font-size:12px;line-height:1.5}
+
+.draft-summary{display:flex;align-items:center;justify-content:space-between;margin:24px 0 12px;flex-wrap:wrap;gap:10px}
+.draft-summary-title{font-size:13px;font-weight:700;color:var(--ink)}
+.draft-summary-sub{font-size:11.5px;color:var(--ink3);margin-top:2px}
+.draft-actions{display:flex;gap:8px}
+.btn-promote{background:var(--grn);color:#fff;border-color:var(--grn)}
+.btn-promote:hover{background:#085C35;border-color:#085C35;color:#fff}
+.btn-promote:disabled{background:var(--rule2);border-color:var(--rule2);color:var(--ink3);cursor:not-allowed}
+
+.chunk-item{background:var(--surf);border:1px solid var(--rule);border-radius:var(--r);margin-bottom:14px;overflow:hidden;box-shadow:var(--sh)}
+.chunk-item-head{display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--rule);background:var(--bg)}
+.chunk-item-head label{display:flex;align-items:center;gap:8px;cursor:pointer;flex:1;min-width:0}
+.chunk-item-head input[type=checkbox]{width:15px;height:15px;accent-color:var(--lifex);cursor:pointer;flex-shrink:0}
+.chunk-id-label{font-family:'SFMono-Regular',Consolas,monospace;font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chunk-diff{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.chunk-diff.single{grid-template-columns:1fr}
+.chunk-diff-col{padding:12px 16px}
+.chunk-diff-col + .chunk-diff-col{border-left:1px solid var(--rule)}
+.chunk-diff-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);margin-bottom:7px}
+.chunk-diff-lbl.old{color:var(--red)}
+.chunk-diff-lbl.new{color:var(--grn)}
+.chunk-diff-pre{font-family:'SFMono-Regular',Consolas,monospace;font-size:11px;line-height:1.6;color:var(--ink2);white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto;background:var(--bg);border-radius:var(--r-sm);padding:9px 10px}
+.chunk-diff-pre::-webkit-scrollbar{width:4px}
+.chunk-diff-pre::-webkit-scrollbar-thumb{background:var(--rule2);border-radius:2px}
+@media(max-width:760px){.chunk-diff{grid-template-columns:1fr}.chunk-diff-col+.chunk-diff-col{border-left:none;border-top:1px solid var(--rule)}}
+
+.promote-result{background:var(--grn-lt);border:1px solid rgba(10,110,64,.2);border-radius:var(--r);padding:14px 16px;margin-top:16px}
+.promote-result-title{font-size:12.5px;font-weight:700;color:var(--grn);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.promote-result ul{margin:8px 0 0;padding-left:18px;font-size:11.5px;color:var(--ink2)}
+.al-update-note{font-size:11px;color:var(--amb);background:var(--amb-lt);border-radius:4px;padding:6px 10px;margin-top:6px}
+
+.chunks-empty{text-align:center;padding:50px 20px;color:var(--ink3);font-size:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:#fff;font-size:12px;font-weight:500;padding:8px 16px;border-radius:20px;display:flex;align-items:center;gap:7px;opacity:0;transition:all .25s ease;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.18);z-index:999}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* Reset-cache control (Usage & Cost topbar) */
+.btn-reset-cache{
+  margin-left:auto;font-size:11.5px;font-weight:500;
+  padding:5px 11px;border-radius:var(--r-sm);cursor:pointer;
+  background:var(--surf);color:var(--ink2);border:1.5px solid var(--rule2);
+  transition:border-color .15s,color .15s;white-space:nowrap;
+}
+.btn-reset-cache:hover:not(:disabled){border-color:var(--lifex);color:var(--lifex)}
+.btn-reset-cache:disabled{opacity:.55;cursor:default}
+.cache-note{font-size:11.5px;border-radius:var(--r-sm);padding:9px 12px;margin-bottom:14px;line-height:1.5}
+.cache-note.ok{background:var(--grn-lt);color:var(--grn)}
+.cache-note.err{background:var(--red-lt);color:var(--red)}
+
+/* Wide tables must scroll inside their own box, never widen the page. */
+.log-wrap{overflow-x:auto}
+.log-table{min-width:520px}
+
+/* ── Portrait / vertical-screen layout ──────────────────────────────────
+   The competition runs three groups side by side on three portrait
+   displays. A panel like that is tall and column-shaped even when its
+   pixel width is nominally "desktop" (a 1080x1920 screen is 1080 wide but
+   reads as a narrow column), so these rules key off ORIENTATION rather
+   than waiting for a phone-sized width breakpoint. Anything that assumes
+   a landscape amount of horizontal room gets a column-friendly form. */
+@media (orientation:portrait){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .chunk-diff{grid-template-columns:1fr}
+  .chunk-diff-col+.chunk-diff-col{border-left:none;border-top:1px solid var(--rule)}
+  .msg{max-width:94%}
+  .upload-card{max-width:none}
+}
+/* Tall AND genuinely narrow: also drop the lender pill row for the
+   dropdown, which the 1000px rule below would otherwise miss on a
+   portrait panel wider than 1000px. */
+@media (orientation:portrait) and (max-width:900px){
+  .lender-pills-wrap{display:none!important}
+  .lender-dropdown-wrap{display:flex!important}
+}
+
+/* Mobile */
+@media(max-width:640px){
+  .sidebar{position:fixed;top:0;left:0;height:100%;z-index:100;transform:translateX(-100%);transition:transform .2s ease;width:240px;min-width:240px}
+  .sidebar.mobile-open{transform:translateX(0)}
+  .sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99}
+  .sidebar-overlay.show{display:block}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .topbar{flex-wrap:wrap;gap:8px}
+  .btn-reset-cache{margin-left:0}
+  .chat-scroll{padding:14px}
+  .welcome-title{font-size:18px}
+}
+@media(min-width:641px){.sidebar-overlay{display:none!important}}
+</style>
+</head>
+<body>
+<div class="sidebar-overlay" id="overlay" onclick="closeSidebar()"></div>
+<div class="shell">
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <nav class="nav" style="padding-top:14px">
+    <div class="nav-section">Workspace</div>
+    <div class="nav-item active" onclick="go(this,'chat')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Ask a question
+    </div>
+    <div class="nav-item" onclick="go(this,'library')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Answer library
+      <span class="nav-badge" id="lib-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="go(this,'review')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Review queue
+      <span class="nav-badge rev" id="rev-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="go(this,'costs')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Usage & cost
+    </div>
+    <div class="nav-section">Admin</div>
+    <div class="nav-item" onclick="go(this,'chunks')">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Update chunks
+    </div>
+  </nav>
+  <div class="sidebar-foot">
+    <div class="status-row"><div class="status-dot"></div>Pipeline connected</div>
+    <div class="status-row"><div class="status-dot"></div><span id="foot-cache">0 answers cached</span></div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- CHAT -->
+  <div class="panel active" id="panel-chat">
+
+    <!-- Brand topbar — LifeX centred -->
+    <div class="brand-topbar">
+      <button class="hamburger" onclick="toggleSidebar()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%)">
+        <svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="brand-topbar-center">
+        <div class="brand-mark-top">
+          <svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px">
+            <path d="M12 2L3 7l9 5 9-5-9-5z" fill="white" opacity=".9"/>
+            <path d="M3 12l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
+            <path d="M3 17l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".5"/>
+          </svg>
+        </div>
+        <span class="brand-topbar-name">LIFE<span style="color:#A855F7">X</span></span>
+        
+        
+      </div>
+      <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%)">
+        <button class="new-chat-btn" onclick="newChat()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New chat
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">Lender:</span>
+
+      <!-- Full pill row — shown on wide screens -->
+      <div class="lender-pills-wrap" style="display:flex;gap:5px;flex-wrap:nowrap">
+        <button class="lender-pill active" data-l="ALL" onclick="setLenderFilter(this)">All</button>
+        <button class="lender-pill" data-l="Angle Finance" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--angle-c)"></span>Angle</button>
+        <button class="lender-pill" data-l="BFS" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--bfs-c)"></span>BFS</button>
+        <button class="lender-pill" data-l="Capital Finance" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--cfal-c)"></span>Capital Finance</button>
+        <button class="lender-pill" data-l="flexicommercial" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--flexi-c)"></span>Flexi</button>
+        <button class="lender-pill" data-l="Metro Finance" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--metro-c)"></span>Metro</button>
+        <button class="lender-pill" data-l="Resimac" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--res-c)"></span>Resimac</button>
+        <button class="lender-pill" data-l="Westpac" onclick="setLenderFilter(this)"><span class="pill-dot" style="background:var(--wbc-c)"></span>Westpac</button>
+      </div>
+
+      <!-- Compact dropdown — shown on narrow screens -->
+      <div class="lender-dropdown-wrap">
+        <div class="lender-dot-active" id="dd-dot" style="background:var(--navy)"></div>
+        <select class="lender-dropdown" id="lender-dd" onchange="setLenderFromDropdown(this)">
+          <option value="ALL">All lenders</option>
+          <option value="Angle Finance">Angle Finance</option>
+          <option value="BFS">BFS</option>
+          <option value="Capital Finance">Capital Finance</option>
+          <option value="flexicommercial">flexicommercial</option>
+          <option value="Metro Finance">Metro Finance</option>
+          <option value="Resimac">Resimac</option>
+          <option value="Westpac">Westpac</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="chat-scroll" id="chat-body">
+      <div class="welcome" id="welcome-state">
+        <div class="welcome-icon">
+          <svg style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="welcome-brand">LifeX Policy Assistant</div>
+        <div class="welcome-title">What do you need to know?</div>
+        <div class="welcome-sub">Ask about any lender's rates, loan limits, eligibility, documentation, or exclusions. Select a lender above to narrow results.</div>
+        <div class="welcome-examples">
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--res-lt);color:var(--res-c)">Resimac</span>
+            <span class="ex-q">What is the interest rate for electric vehicles under the PremiumPLUS tier?</span>
+          </div>
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--wbc-lt);color:var(--wbc-c)">Westpac</span>
+            <span class="ex-q">What is the DriveXpress maximum loan for a new client with residential property?</span>
+          </div>
+          <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)">
+            <span class="ex-lender" style="background:var(--cfal-lt);color:var(--cfal-c)">Capital Finance</span>
+            <span class="ex-q">What documentation is required for a transaction between $500k and $1 million?</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-wrap">
+      <div class="input-row">
+        <textarea id="qa-in" placeholder="Type your question here, or click an example above…" onkeydown="handleKey(event)" oninput="resize(this)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendQ()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="input-hint">Press Enter to send · Shift+Enter for new line</div>
+    </div>
+  </div>
+
+  <!-- LIBRARY -->
+  <div class="panel" id="panel-library">
+    <div class="brand-topbar">
+      <button class="hamburger" onclick="toggleSidebar()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%)"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="brand-topbar-center">
+        <div class="brand-mark-top"><svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px"><path d="M12 2L3 7l9 5 9-5-9-5z" fill="white" opacity=".9"/><path d="M3 12l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".7"/><path d="M3 17l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg></div>
+        <span class="brand-topbar-name">LIFE<span style="color:#A855F7">X</span></span>
+        
+        
+      </div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-title">Answer Library</span>
+    </div>
+    <div class="lib-controls">
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" id="lib-search" placeholder="Search questions, answers, lenders…" oninput="renderLib()">
+      </div>
+      <button class="toggle-pill active" data-s="all" onclick="setLibFilter(this)">All</button>
+      <button class="toggle-pill" data-s="cached" onclick="setLibFilter(this)">In library</button>
+      <button class="toggle-pill" data-s="pending" onclick="setLibFilter(this)">Pending</button>
+    </div>
+    <div class="lib-scroll" id="lib-body"></div>
+  </div>
+
+  <!-- REVIEW -->
+  <div class="panel" id="panel-review">
+    <div class="brand-topbar">
+      <button class="hamburger" onclick="toggleSidebar()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%)"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="brand-topbar-center">
+        <div class="brand-mark-top"><svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px"><path d="M12 2L3 7l9 5 9-5-9-5z" fill="white" opacity=".9"/><path d="M3 12l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".7"/><path d="M3 17l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg></div>
+        <span class="brand-topbar-name">LIFE<span style="color:#A855F7">X</span></span>
+        
+        
+      </div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-title">Review Queue</span>
+    </div>
+    <div class="rev-scroll" id="rev-body"></div>
+  </div>
+
+  <!-- COSTS -->
+  <div class="panel" id="panel-costs">
+    <div class="brand-topbar">
+      <button class="hamburger" onclick="toggleSidebar()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%)"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="brand-topbar-center">
+        <div class="brand-mark-top"><svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px"><path d="M12 2L3 7l9 5 9-5-9-5z" fill="white" opacity=".9"/><path d="M3 12l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".7"/><path d="M3 17l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg></div>
+        <span class="brand-topbar-name">LIFE<span style="color:#A855F7">X</span></span>
+        
+        
+      </div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-title">Usage & Cost</span>
+      <button class="btn-reset-cache" id="btn-reset-cache" onclick="resetQueryCache()" title="Clear stored AI answers so the next questions are answered fresh. Reviewed corrections are not affected.">Reset cache</button>
+    </div>
+    <div class="cost-scroll">
+      <div id="reset-cache-result"></div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-lbl">Total queries</div><div class="kpi-val" id="k-total">0</div><div class="kpi-sub">this session</div></div>
+        <div class="kpi"><div class="kpi-lbl">API calls</div><div class="kpi-val" id="k-api">0</div><div class="kpi-sub" id="k-api-sub">—% of queries</div></div>
+        <div class="kpi"><div class="kpi-lbl">API cost</div><div class="kpi-val" id="k-cost">$0.00</div><div class="kpi-sub">estimated</div></div>
+        <div class="kpi hl"><div class="kpi-lbl">Saved by cache</div><div class="kpi-val" id="k-saved">$0.00</div><div class="kpi-sub" id="k-saved-sub">0 instant answers</div></div>
+      </div>
+      <div class="sec-hd">Library hits vs API calls</div>
+      <div class="bar-wrap">
+        <div class="bar-r"><div class="bar-lbl">Library hits</div><div class="bar-track"><div class="bar-fill g" id="bh" style="width:0%"></div></div><div class="bar-v" id="bvh">0</div></div>
+        <div class="bar-r"><div class="bar-lbl">API calls</div><div class="bar-track"><div class="bar-fill a" id="ba" style="width:0%"></div></div><div class="bar-v" id="bva">0</div></div>
+        <div style="font-size:10px;color:var(--ink3);margin-top:10px">Library hits: &lt;10ms · $0.00 · API calls: ~1–2s · ~$0.008 each</div>
+      </div>
+      <div class="sec-hd">Query log</div>
+      <div class="log-wrap">
+        <table class="log-table">
+          <thead><tr><th>Question</th><th>Source</th><th>Lender</th><th>Time</th><th>Cost</th></tr></thead>
+          <tbody id="log-body"><tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:20px">No queries yet</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHUNKS -->
+  <div class="panel" id="panel-chunks">
+    <div class="brand-topbar">
+      <button class="hamburger" onclick="toggleSidebar()" style="position:absolute;left:12px;top:50%;transform:translateY(-50%)"><svg style="width:15px;height:15px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="brand-topbar-center">
+        <div class="brand-mark-top"><svg viewBox="0 0 24 24" fill="none" style="width:14px;height:14px"><path d="M12 2L3 7l9 5 9-5-9-5z" fill="white" opacity=".9"/><path d="M3 12l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".7"/><path d="M3 17l9 5 9-5" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity=".5"/></svg></div>
+        <span class="brand-topbar-name">LIFE<span style="color:#A855F7">X</span></span>
+      </div>
+    </div>
+    <div class="topbar">
+      <span class="topbar-title">Update Policy Chunks</span>
+    </div>
+    <div class="chunks-scroll" id="chunks-body">
+      <div class="upload-card">
+        <h3>Draft chunks from a policy PDF</h3>
+        <div class="sub">Upload one lender's PDF (a rate card, product guide, exclusions list...). It gets read by a vision model and drafted into chunk format automatically — nothing goes live until you review and approve it below.</div>
+        <div class="upload-row">
+          <div class="upload-field">
+            <label>Lender</label>
+            <select class="upload-select" id="chunk-lender">
+              <option value="ANGLE">Angle Finance</option>
+              <option value="BFS">BFS</option>
+              <option value="CFAL">Capital Finance</option>
+              <option value="FLEXI">flexicommercial</option>
+              <option value="METRO">Metro Finance</option>
+              <option value="RESIMAC">Resimac</option>
+              <option value="WESTPAC">Westpac</option>
+            </select>
+          </div>
+          <div class="upload-field">
+            <label>PDF file</label>
+            <input class="upload-file" type="file" id="chunk-file" accept="application/pdf" onchange="onChunkFileChosen(this)">
+          </div>
+          <button class="btn-draft" id="btn-draft-chunks" onclick="uploadAndDraft()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Draft chunks
+          </button>
+        </div>
+        <div class="upload-filename" id="chunk-filename"></div>
+        <div id="chunk-draft-status"></div>
+      </div>
+
+      <div id="chunk-draft-results"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+const IN_PER_1K=0.003,OUT_PER_1K=0.015,AVG_IN=420,AVG_OUT=175;
+const API_COST=(AVG_IN*IN_PER_1K+AVG_OUT*OUT_PER_1K)/1000;
+const API_BASE='http://127.0.0.1:8000';
+const LENDER_MAP={ANGLE:'Angle Finance',BFS:'BFS',CFAL:'Capital Finance',FLEXI:'flexicommercial',METRO:'Metro Finance',RESIMAC:'Resimac',WESTPAC:'Westpac'};
+const LB={
+  'Angle Finance':{bg:'#F9E0F2',c:'#9B0060',abbr:'ANG'},
+  'BFS':{bg:'#E0EDFB',c:'#0D4A8A',abbr:'BFS'},
+  'Capital Finance':{bg:'#EDE4F8',c:'#4A1878',abbr:'CAP'},
+  'flexicommercial':{bg:'#FDEEE4',c:'#B84000',abbr:'FLX'},
+  'Metro Finance':{bg:'#E0EDFB',c:'#0D4DA8',abbr:'MET'},
+  'Resimac':{bg:'#DDF0F6',c:'#0A5870',abbr:'RES'},
+  'Westpac':{bg:'#FCE4E4',c:'#A00E0E',abbr:'WBC'}
+};
+
+function ldot(l,sz=28){const b=LB[l]||{bg:'#F1F5F9',c:'#475569',abbr:'?'};return`<div class="lib-ldot" style="background:${b.bg};color:${b.c};width:${sz}px;height:${sz}px">${b.abbr}</div>`}
+
+// ── Answer formatter ─────────────────────────────────────────────────────────
+// Takes a plain-text answer string and returns structured HTML
+function formatAnswer(text) {
+  if(!text) return '<p class="ans-para">No answer available.</p>';
+
+  // Split into sentences and lines
+  const lines = text.split(/\n+/).map(l=>l.trim()).filter(Boolean);
+
+  // Try to detect if it's a list-style answer (lots of commas or semicolons with conditions)
+  const isLongList = lines.length===1 && (text.match(/,/g)||[]).length > 4;
+  const hasMultipleLines = lines.length > 2;
+
+  // Detect key-value patterns like "Rate: 7.54%" or "ABN: 2+ years"
+  const kvPattern = /^([A-Z][^:]{2,30}):\s+(.+)$/;
+
+  // Detect numeric list items like "1." or "-" or "•"
+  const listPattern = /^[-•\*]|\d+\./;
+
+  // Build sections from lines
+  let sections = [];
+  let currentSection = { title: null, items: [], type: 'para' };
+
+  const flushSection = () => {
+    if(currentSection.items.length > 0) sections.push({...currentSection});
+    currentSection = { title: null, items: [], type: 'para' };
+  };
+
+  lines.forEach((line, i) => {
+    // Check if it's a section header (short, ends with colon, all caps or title case)
+    const isHeader = line.endsWith(':') && line.length < 60 && !line.match(/^\d/);
+    if(isHeader) {
+      flushSection();
+      currentSection.title = line.replace(/:$/, '');
+      return;
+    }
+
+    // Detect KV pairs
+    const kvMatch = line.match(kvPattern);
+    if(kvMatch && lines.length > 2) {
+      if(currentSection.type !== 'kv') {flushSection();currentSection.type='kv';}
+      currentSection.items.push({key:kvMatch[1], val:kvMatch[2]});
+      return;
+    }
+
+    // Detect list items
+    if(listPattern.test(line)) {
+      if(currentSection.type !== 'list') {flushSection();currentSection.type='list';}
+      currentSection.items.push(line.replace(/^[-•\*\d\.]\s*/,''));
+      return;
+    }
+
+    // Regular paragraph
+    if(currentSection.type !== 'para') {flushSection();}
+    currentSection.items.push(line);
+    currentSection.type = 'para';
+  });
+  flushSection();
+
+  // If single long sentence, auto-split on semicolons or period+condition words
+  if(sections.length === 1 && sections[0].type === 'para' && sections[0].items.length === 1) {
+    const raw = sections[0].items[0];
+    // Try splitting on ". " followed by capital letter = new condition
+    const sentenceParts = raw.split(/\.\s+(?=[A-Z])/).filter(Boolean);
+    if(sentenceParts.length > 2) {
+      sections = [{title:null, type:'para', items:sentenceParts.map((s,i)=>i<sentenceParts.length-1?s+'.':s)}];
+    }
+    // Try splitting on semicolons for list-like content
+    if((raw.match(/;/g)||[]).length >= 2) {
+      const parts = raw.split(/;\s*/).filter(Boolean);
+      sections = [{title:'Details', type:'list', items:parts}];
+    }
+  }
+
+  // Render sections
+  let html = '';
+  sections.forEach(sec => {
+    html += '<div class="ans-section">';
+    if(sec.title) html += `<div class="ans-section-title">${esc(sec.title)}</div>`;
+
+    if(sec.type === 'kv') {
+      html += '<div class="ans-kv">';
+      sec.items.forEach(({key,val}) => {
+        html += `<div class="ans-kv-row"><span class="ans-kv-key">${esc(key)}</span><span class="ans-kv-val">${esc(val)}</span></div>`;
+      });
+      html += '</div>';
+    } else if(sec.type === 'list') {
+      html += '<ul class="ans-list">';
+      sec.items.forEach(item => { html += `<li>${esc(item)}</li>`; });
+      html += '</ul>';
+    } else {
+      sec.items.forEach(item => {
+        // Highlight sentences containing rates (numbers with %)
+        if(item.match(/\d+\.?\d*%/) && item.length < 200) {
+          html += `<div class="ans-highlight">${esc(item)}</div>`;
+        } else {
+          html += `<p class="ans-para">${esc(item)}</p>`;
+        }
+      });
+    }
+    html += '</div>';
+  });
+
+  return html || `<p class="ans-para">${esc(text)}</p>`;
+}
+
+let KB=[
+  {id:1,q:"Angle Finance Low Doc limits?",a:"Low Doc Band 1 — Under $100,000:\nABN: 2+ years\nVeda score: 550+\nProperty backing: not required\nAsset classes: Primary, Secondary, Tertiary\nCredit reference: not required\n\nLow Doc Band 2 — $100,000 to $250,000:\nABN: 2+ years\nGST: 1+ year\nVeda score: 550+ (Corporate) / 600+ (Individual)\nProperty backing: required\nAsset classes: Primary and Secondary only\nMotor vehicles: up to $200,000\nCredit reference: asset finance credit reference or mortgage statements required\n\nLow Doc Band 3 — Up to $400,000:\nABN: 3+ years\nGST: 3+ years\nVeda score: 600+\nProperty backing: required (including spousal)\nAsset classes: Primary and Secondary only — no tertiary assets, prime movers, or buses\nCredit reference: asset finance credit reference from an Angle-accepted lender required\nATO portals: required for amounts above $250,000",lender:"Angle Finance",section:"Rate Card, p.3 — Low Doc Guidelines",status:"cached",ts:Date.now()-86400000*5,hits:8},
+  {id:2,q:"BFS Tier 2 minimum CCR score?",a:"Credit Score Requirements by Tier:\nUltra Prime: 960+\nTier 1: 800+\nTier 2: 600+\nTier 3: 550+ (20% deposit required)\nTier 4: 400+ (20% deposit required)\nBFS Plus: 400+ (or 550 for used vehicles on commercial contracts)\n\nAll scores are Experian CCR and are effective from 1 July 2026.",lender:"BFS",section:"Product Guide, p.1 — Pricing Table",status:"cached",ts:Date.now()-86400000*5,hits:9},
+  {id:3,q:"Capital Finance docs needed under $250k?",a:"Required Documents — Transactions Under $250,000:\n\nApplication & Customer Details:\nClient information (name, address, DOB, etc.)\nBrief background of business and directors\nABN registered for 2 years and GST registered\nFull description of goods\nReason for purchase\nSigned privacy form from ALL individuals\n\nFinancial Information:\nLast 2 years financial statements — not more than 18 months old (P&L and balance sheet)\nLast 2 years tax returns for individuals and beneficiaries\nCurrent asset and liability statement from all directors and individual guarantors\nCommitment schedule",lender:"Capital Finance",section:"Credit Checklist — Min. Documentation Requirements",status:"cached",ts:Date.now()-86400000*4,hits:5},
+  {id:4,q:"flexicommercial flexiPremium rates?",a:"flexiPremium Interest Rates — Effective 15 May 2026:\n\nPrimary Assets:\n$50,001 to $100,000: 7.30% p.a.\n$100,001 to $500,000: 7.30% p.a.\n\nSecondary Assets:\n$50,001 to $100,000: 8.69% p.a.\n$100,001 to $500,000: 8.19% p.a.\n\nEligibility Requirements:\nTime in business (asset backed): 4+ years ABN and GST\nTime in business (non-asset backed): 8+ years\nEntity types: Companies, Trusts, Partnerships only — Sole Traders excluded\nMaximum brokerage: 3%",lender:"flexicommercial",section:"Rate Card May 2026 — FlexiPremium",status:"cached",ts:Date.now()-86400000*3,hits:6},
+  {id:5,q:"Metro Finance passenger vehicle max loan?",a:"Passenger Vehicle — Property Backed:\nMaximum loan: $150,000\nNew customer exposure: $250,000\nAfter 12 months good history: $500,000\nAfter 24 months good history: $750,000\n\nPassenger Vehicle — Non-Property Backed:\nMaximum loan: $100,000\nMaximum exposure: $100,000\nDeposit required: 30%\nPurchase type: dealer sale only\n\nAsset Conditions:\nMaximum asset age at end of term: 12 years\nGST registration: 2 years continuously",lender:"Metro Finance",section:"Passenger Vehicle Streamlined Product",status:"cached",ts:Date.now()-86400000*4,hits:6},
+  {id:6,q:"Resimac rates for electric vehicles?",a:"Electric Vehicle Interest Rates:\nPremiumPLUS tier: 7.54% p.a.\nPremium, Standard, and Basic tiers: 7.79% p.a.\n\nRisk Loadings — each loading adds +2% to the base rate:\nPrivate sales\nClassic cars\nAssets aged 16+ years at end of term\nPrime movers\n\nImportant: Multiple loadings can apply to the same deal but are capped at a maximum of +4% total per deal.",lender:"Resimac",section:"Commercial Product Guide, p.4 — Interest Rates",status:"cached",ts:Date.now()-86400000*5,hits:8},
+  {id:7,q:"Westpac DriveXpress max loan new client?",a:"New Client — Westpac Business Bank:\nRequirements: residential property ownership + minimum $75,000 annual income\nMaximum loan: $150,000\nMaximum total exposure: $250,000\nEligible goods: Categories A, B, and C\n\nExisting Client — 12 Months Current WEF History:\nCategory A: up to $200,000\nCategory B: up to $300,000\nCategory C: up to $500,000\nMaximum total WEF exposure: $750,000\n\nNote: Total exposure across all WEF facilities must not exceed the maximum regardless of category.",lender:"Westpac",section:"Key Financial Policies Q1FY26 — DriveXpress",status:"cached",ts:Date.now()-86400000*5,hits:9},
+];
+let nextId=8,session={api:0,hits:0,cost:0,saved:0,log:[]},busy=false,qaLender='ALL',libFilter='all',srcSeq=0;
+try{const s=localStorage.getItem('cmap_lender');if(s)qaLender=s;}catch(e){}
+let conversationHistory=[];
+function pushHistory(question,answer){conversationHistory.push({question,answer});if(conversationHistory.length>8)conversationHistory.shift();}
+
+function sim(a,b){
+  const wa=new Set(a.toLowerCase().split(/\W+/).filter(w=>w.length>2));
+  const wb=new Set(b.toLowerCase().split(/\W+/).filter(w=>w.length>2));
+  if(!wa.size||!wb.size)return 0;
+  let n=0;wa.forEach(w=>{if(wb.has(w))n++;});
+  return n/Math.max(wa.size,wb.size);
+}
+function findCached(q,lf){
+  let best=null,bs=0;
+  for(const e of KB){
+    if(e.status!=='cached')continue;
+    if(lf!=='ALL'&&e.lender!==lf)continue;
+    const s=sim(q,e.q);if(s>bs){bs=s;best=e;}
+  }
+  return bs>0.35?best:null;
+}
+
+function ask(q){document.getElementById('qa-in').value=q;sendQ();}
+
+function sendQ(){
+  if(busy)return;
+  const inp=document.getElementById('qa-in'),q=inp.value.trim();
+  if(!q)return;
+  inp.value='';resize(inp);
+  const ws=document.getElementById('welcome-state');if(ws)ws.remove();
+  busy=true;document.getElementById('send-btn').disabled=true;
+  addUserMsg(q);
+  const cached=findCached(q,qaLender);
+  if(cached){
+    const ms=4+Math.round(Math.random()*7);
+    cached.hits++;session.hits++;session.saved+=API_COST;
+    session.log.unshift({q,src:'cache',ms,cost:0,lender:cached.lender,section:cached.section});
+    setTimeout(()=>{addAiMsg(cached.a,cached.lender,cached.section,true,ms);pushHistory(q,cached.a);updateAll();busy=false;document.getElementById('send-btn').disabled=false;},ms+80);
+  } else {
+    const typing=addTyping();
+    const qlender=(qaLender!=='ALL')?qaLender+': '+q:q;
+    fetch(API_BASE+'/query',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({question:qlender,history:conversationHistory.slice(-3)})})
+    .then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+    .then(data=>{
+      typing.remove();
+      const ms=Math.round((data.response_time||1)*1000);
+      const apiLender=data.sources&&data.sources.length>0?data.sources[0].lender:null;
+      const lender=LENDER_MAP[apiLender]||apiLender;
+      const section=data.sources?data.sources.map(s=>s.chunk_id).join(', '):'';
+      const outTokens=Math.round(data.answer.length/4);
+      const cost=(AVG_IN*IN_PER_1K+outTokens*OUT_PER_1K)/1000;
+      session.api++;session.cost+=cost;
+      session.log.unshift({q,src:'api',ms,cost,lender:lender||'—',section:section||'—'});
+      addAiMsg(data.answer,lender,section,false,ms,data.sources);
+      pushHistory(q,data.answer);
+      if(lender&&data.answer_source==='generated')KB.unshift({id:nextId++,q,a:data.answer,lender,section,status:'pending',ts:Date.now(),hits:0});
+      updateAll();busy=false;document.getElementById('send-btn').disabled=false;
+      const rb=document.getElementById('rev-badge');rb.classList.remove('pulse');void rb.offsetWidth;rb.classList.add('pulse');
+    })
+    .catch(()=>{
+      typing.remove();
+      addAiMsg('Could not reach the backend. Please make sure the FastAPI server is running.',null,null,false,0);
+      busy=false;document.getElementById('send-btn').disabled=false;
+    });
+  }
+}
+
+function addUserMsg(t){
+  const b=document.getElementById('chat-body'),d=document.createElement('div');
+  d.className='msg user';
+  d.innerHTML=`<div class="msg-wrap"><div class="bubble-user">${esc(t)}</div></div>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+
+function addTyping(){
+  const b=document.getElementById('chat-body'),d=document.createElement('div');d.className='msg ai';
+  const label=qaLender!=='ALL'?qaLender+' policy documents':'all 7 lenders';
+  d.innerHTML=`<div class="msg-wrap"><div class="answer-card"><div class="typing-wrap"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div><div class="typing-status">Searching ${label}…</div></div></div></div>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;return d;
+}
+
+function prettyChunk(chunkId){return chunkId?chunkId.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'';}
+
+// Builds the source footer. sourcesArr (when given) is the real backend
+// sources list ([{chunk_id,lender,...}]) for a fresh /query answer -- used
+// to group chips by lender and, past a few sources, collapse the whole
+// thing behind a single "N lenders · M sources" toggle instead of dumping
+// every chunk_id as one giant string in one chip (what a no-lender-detected
+// fan-out question used to do: 60+ chunk names crammed into one pill). Only
+// a couple of source-less fallback paths (the frontend's own mocked
+// library-cache hits) still pass just lender+section instead.
+function addAiMsg(text,lender,section,isHit,ms,sourcesArr){
+  const b=document.getElementById('chat-body'),d=document.createElement('div');d.className='msg ai';
+  const lb=LB[lender]||null;
+  const lenderTag=lb?`<span class="answer-lender-tag" style="background:${lb.bg};color:${lb.c}">${lender}</span>`:'';
+  const fromLib=isHit?`<span class="answer-from-lib"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:10px;height:10px"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>From library · ${ms}ms</span>`:'';
+  const header=(lenderTag||fromLib)?`<div class="answer-header">${lenderTag}${fromLib}</div>`:'';
+
+  let footer='',expandPanel='';
+  if(sourcesArr&&sourcesArr.length){
+    const byLender={};
+    sourcesArr.forEach(s=>{(byLender[s.lender]=byLender[s.lender]||[]).push(s.chunk_id);});
+    const lenders=Object.keys(byLender).sort();
+    if(lenders.length<=1&&sourcesArr.length<=3){
+      // Small, single-lender answer -- individual chunk chips read fine
+      // inline, no need to collapse anything.
+      const chips=sourcesArr.map(s=>`<span class="src-chip" style="background:var(--bg);color:var(--ink3)">${esc(prettyChunk(s.chunk_id))}</span>`).join('');
+      footer=`<div class="answer-footer"><span class="source-label">Source</span><span class="src-chip" style="background:${lb?lb.bg:'#F1F5F9'};color:${lb?lb.c:'#475569'}">${lender}</span>${chips}</div>`;
+    } else {
+      const sid='src'+(++srcSeq);
+      const lenderWord=lenders.length===1?'lender':'lenders';
+      const srcWord=sourcesArr.length===1?'source':'sources';
+      footer=`<div class="answer-footer"><span class="source-label">Source</span><span class="src-chip src-chip-toggle" id="${sid}-t" onclick="toggleSrcExpand('${sid}')">${lenders.length} ${lenderWord} · ${sourcesArr.length} ${srcWord}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg></span></div>`;
+      expandPanel=`<div class="src-expand" id="${sid}">${lenders.map(l=>{
+        const lb2=LB[l]||null;
+        const chips=byLender[l].map(cid=>`<span class="src-chip" style="background:var(--surf);color:var(--ink3)">${esc(prettyChunk(cid))}</span>`).join('');
+        return `<div class="src-expand-group"><div class="src-expand-lender" style="color:${lb2?lb2.c:'var(--ink3)'}">${l}</div><div class="src-expand-chips">${chips}</div></div>`;
+      }).join('')}</div>`;
+    }
+  } else if(sourcesArr){
+    // Explicitly an empty array (e.g. a conversational/meta answer that
+    // skipped retrieval entirely) -- no footer, nothing to cite.
+  } else if(lender){
+    // Legacy fallback: no real sources array given (the frontend's own
+    // mocked library-cache hits), just the old lender + section string.
+    const displaySection=section?section.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()):'';
+    footer=`<div class="answer-footer"><span class="source-label">Source</span><span class="src-chip" style="background:${lb?lb.bg:'#F1F5F9'};color:${lb?lb.c:'#475569'}">${lender}</span>${displaySection?`<span class="src-chip" style="background:var(--bg);color:var(--ink3)">${displaySection}</span>`:''}</div>`;
+  }
+
+  d.innerHTML=`<div class="msg-wrap"><div class="answer-card">${header}<div class="answer-body">${formatAnswer(text)}</div>${footer}${expandPanel}</div></div>`;
+  b.appendChild(d);b.scrollTop=b.scrollHeight;
+}
+
+function toggleSrcExpand(sid){
+  const panel=document.getElementById(sid),toggle=document.getElementById(sid+'-t');
+  if(!panel)return;
+  panel.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+// Library
+function setLibFilter(el){document.querySelectorAll('.toggle-pill').forEach(b=>b.classList.remove('active'));el.classList.add('active');libFilter=el.dataset.s;renderLib();}
+function renderLib(){
+  const q=(document.getElementById('lib-search')?.value||'').toLowerCase().trim();
+  let entries=[...KB];
+  if(libFilter!=='all')entries=entries.filter(e=>e.status===libFilter);
+  if(q)entries=entries.filter(e=>e.q.toLowerCase().includes(q)||e.a.toLowerCase().includes(q)||e.lender.toLowerCase().includes(q));
+  document.getElementById('lib-badge').textContent=KB.length;
+  const body=document.getElementById('lib-body');
+  if(!entries.length){body.innerHTML='<div class="lib-empty">No entries match</div>';return;}
+  body.innerHTML=entries.map(e=>{
+    const l=LB[e.lender]||{bg:'#F1F5F9',c:'#475569'};
+    const stag=e.status==='cached'?'<span class="tag tag-cached">In library</span>':'<span class="tag tag-pending">Pending review</span>';
+    const hittag=e.hits>0?`<span class="tag tag-section">Used ${e.hits}×</span>`:'';
+    return`<div class="lib-row" id="lr-${e.id}"><div>${ldot(e.lender)}</div><div class="lib-main"><div class="lib-q">${esc(e.q)}</div><div class="lib-a clamped" id="la-${e.id}">${esc(e.a)}</div><span class="lib-expand" onclick="toggleLibExpand(${e.id})" id="le-${e.id}">Show full answer</span><div class="lib-meta"><span class="tag" style="background:${l.bg};color:${l.c}">${e.lender}</span>${stag}${hittag}<span class="lib-ts">${ago(e.ts)}</span></div></div></div>`;
+  }).join('');
+}
+function toggleLibExpand(id){
+  const la=document.getElementById('la-'+id),le=document.getElementById('le-'+id),lr=document.getElementById('lr-'+id);
+  const exp=!la.classList.contains('clamped');
+  if(exp){la.classList.add('clamped');le.textContent='Show full answer';lr.classList.remove('expanded');}
+  else{la.classList.remove('clamped');le.textContent='Show less';lr.classList.add('expanded');}
+}
+
+// Review
+function renderReview(){
+  const pending=KB.filter(e=>e.status==='pending');
+  document.getElementById('rev-badge').textContent=pending.length;
+  const body=document.getElementById('rev-body');
+  if(!pending.length){body.innerHTML='<div class="rev-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Queue is clear — all answers reviewed</div>';return;}
+  body.innerHTML=pending.map(e=>{
+    const l=LB[e.lender]||{bg:'#F1F5F9',c:'#475569'};
+    return`<div class="rev-card" id="rc-${e.id}">
+      <div class="rev-head">${ldot(e.lender,26)}<div style="flex:1"><div class="rev-q">${esc(e.q)}</div><div style="display:flex;gap:4px;margin-top:5px"><span class="tag" style="background:${l.bg};color:${l.c}">${e.lender}</span><span class="tag tag-section">${e.section}</span></div></div></div>
+      <div class="rev-body"><div class="rev-lbl">AI-generated answer</div><div class="rev-answer" id="ra-${e.id}">${esc(e.a)}</div><textarea class="rev-edit-ta" id="re-${e.id}">${e.a}</textarea></div>
+      <div class="rev-foot"><input class="rev-note" id="rn-${e.id}" type="text" placeholder="Optional reviewer note…"><button class="btn" onclick="toggleEdit(${e.id})">Edit</button><button class="btn btn-reject" onclick="rejectEntry(${e.id})">Reject</button><button class="btn btn-approve" onclick="approveEntry(${e.id})">Approve</button></div>
+    </div>`;
+  }).join('');
+}
+function toggleEdit(id){const ta=document.getElementById('re-'+id),ans=document.getElementById('ra-'+id);const e=ta.style.display==='block';if(e){ans.textContent=ta.value;ta.style.display='none';ans.style.display='';}else{ta.style.display='block';ans.style.display='none';ta.focus();}}
+function approveEntry(id){
+  const e=KB.find(x=>x.id===id);if(!e)return;
+  const ta=document.getElementById('re-'+id);if(ta&&ta.style.display==='block')e.a=ta.value;
+  e.status='cached';e.ts=Date.now();
+  const c=document.getElementById('rc-'+id);if(c){c.style.opacity='.35';c.style.pointerEvents='none';}
+  fetch(API_BASE+'/answer-library/save',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({question:e.q,answer:e.a,chunk_ids:e.section?e.section.split(', ').filter(Boolean):[]})}).catch(()=>{});
+  setTimeout(()=>{renderReview();renderLib();updateAll();},700);toast('Answer added to library');
+}
+function rejectEntry(id){KB=KB.filter(x=>x.id!==id);const c=document.getElementById('rc-'+id);if(c){c.style.opacity='.35';c.style.pointerEvents='none';}setTimeout(()=>{renderReview();renderLib();updateAll();},700);toast('Entry rejected');}
+
+// Costs
+// Clears the query cache (stored AI answers) only. Reviewed corrections in
+// the answer library are never touched -- the cache regenerates itself for
+// the price of one slow answer, whereas a correction someone typed is gone
+// for good. The confirm step is here because during a live demo this button
+// sits next to the numbers it resets.
+function resetQueryCache(){
+  const btn=document.getElementById('btn-reset-cache');
+  const out=document.getElementById('reset-cache-result');
+  if(!confirm('Clear all stored AI answers?\n\nThe next few questions will be slower while they are answered fresh. Reviewed corrections in the Answer library are NOT affected.'))return;
+  btn.disabled=true;btn.textContent='Clearing…';
+  fetch(API_BASE+'/query-cache/clear',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'}})
+    .then(async r=>{if(!r.ok){const b=await r.json().catch(()=>({}));throw new Error(b.detail||('HTTP '+r.status));}return r.json();})
+    .then(d=>{
+      btn.disabled=false;btn.textContent='Reset cache';
+      out.innerHTML=`<div class="cache-note ok">Cleared ${d.cleared} stored answer${d.cleared!==1?'s':''}. The next questions will be answered fresh.</div>`;
+      // The frontend keeps its own separate list for the Review tab; clear
+      // the cached entries there too so the two don't disagree about what
+      // is stored. Pending/approved review items are left alone.
+      KB=KB.filter(e=>e.status!=='cached');
+      session.hits=0;session.saved=0;
+      updateAll();
+      toast('Cache cleared');
+    })
+    .catch(err=>{
+      btn.disabled=false;btn.textContent='Reset cache';
+      out.innerHTML=`<div class="cache-note err">Could not clear the cache: ${esc(err.message||String(err))}</div>`;
+    });
+}
+
+function renderCosts(){
+  const total=session.api+session.hits;
+  document.getElementById('k-total').textContent=total;
+  document.getElementById('k-api').textContent=session.api;
+  document.getElementById('k-api-sub').textContent=total>0?`${Math.round(session.api/total*100)}% of queries`:'—% of queries';
+  document.getElementById('k-cost').textContent=`$${session.cost.toFixed(4)}`;
+  document.getElementById('k-saved').textContent=`$${session.saved.toFixed(4)}`;
+  document.getElementById('k-saved-sub').textContent=`${session.hits} instant answer${session.hits!==1?'s':''}`;
+  const mx=Math.max(session.api,session.hits,1);
+  document.getElementById('bh').style.width=`${(session.hits/mx)*100}%`;document.getElementById('ba').style.width=`${(session.api/mx)*100}%`;
+  document.getElementById('bvh').textContent=session.hits;document.getElementById('bva').textContent=session.api;
+  const lb=document.getElementById('log-body');
+  if(!session.log.length){lb.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--ink3);padding:20px">No queries yet</td></tr>';return;}
+  lb.innerHTML=session.log.map(l=>{
+    const badge=l.src==='cache'?'<span class="badge-hit">Library</span>':'<span class="badge-api">API call</span>';
+    const costCell=l.src==='cache'?'<span style="color:var(--grn);font-weight:600">$0.0000</span>':`<span style="color:var(--amb);font-weight:600">$${l.cost.toFixed(4)}</span>`;
+    return`<tr><td style="max-width:220px;word-break:break-word">${esc(l.q.length>60?l.q.substring(0,60)+'…':l.q)}</td><td>${badge}</td><td style="font-size:11px">${l.lender||'—'}</td><td>${l.ms}ms</td><td>${costCell}</td></tr>`;
+  }).join('');
+}
+
+function updateAll(){
+  const cached=KB.filter(e=>e.status==='cached').length;
+  document.getElementById('lib-badge').textContent=KB.length;
+  document.getElementById('rev-badge').textContent=KB.filter(e=>e.status==='pending').length;
+  document.getElementById('foot-cache').textContent=`${cached} answer${cached!==1?'s':''} cached`;
+  renderLib();renderCosts();
+}
+
+function go(el,panel){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');document.getElementById('panel-'+panel).classList.add('active');
+  if(panel==='library')renderLib();if(panel==='review')renderReview();if(panel==='costs')renderCosts();
+  if(window.innerWidth<=640)closeSidebar();
+}
+function toggleSidebar(){
+  if(window.innerWidth<=640){document.getElementById('sidebar').classList.toggle('mobile-open');document.getElementById('overlay').classList.toggle('show');}
+  else{document.getElementById('sidebar').classList.toggle('collapsed');}
+}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('mobile-open');document.getElementById('overlay').classList.remove('show');}
+const LENDER_COLORS = {
+  'ALL':'#0F1F3D','Angle Finance':'#9B0060','BFS':'#0D4A8A',
+  'Capital Finance':'#4A1878','flexicommercial':'#B84000',
+  'Metro Finance':'#0D4DA8','Resimac':'#0A5870','Westpac':'#A00E0E'
+};
+
+function setLenderFilter(el){
+  document.querySelectorAll('.lender-pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  qaLender=el.dataset.l;
+  // Sync dropdown
+  const dd=document.getElementById('lender-dd');
+  if(dd) dd.value=qaLender;
+  const dot=document.getElementById('dd-dot');
+  if(dot) dot.style.background=LENDER_COLORS[qaLender]||'#0F1F3D';
+  try{localStorage.setItem('cmap_lender',qaLender);}catch(e){}
+}
+
+function setLenderFromDropdown(sel){
+  qaLender=sel.value;
+  // Sync pills
+  document.querySelectorAll('.lender-pill').forEach(b=>b.classList.toggle('active',b.dataset.l===qaLender));
+  const dot=document.getElementById('dd-dot');
+  if(dot) dot.style.background=LENDER_COLORS[qaLender]||'#0F1F3D';
+  try{localStorage.setItem('cmap_lender',qaLender);}catch(e){}
+}
+function newChat(){
+  conversationHistory=[];
+  document.getElementById('chat-body').innerHTML=`<div class="welcome" id="welcome-state">
+    <div class="welcome-icon"><svg style="width:22px;height:22px" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+    <div class="welcome-brand">LifeX Policy Assistant</div>
+    <div class="welcome-title">What do you need to know?</div>
+    <div class="welcome-sub">Ask about any lender's rates, loan limits, eligibility, documentation, or exclusions. Select a lender above to narrow results.</div>
+    <div class="welcome-examples">
+      <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)"><span class="ex-lender" style="background:var(--res-lt);color:var(--res-c)">Resimac</span><span class="ex-q">What is the interest rate for electric vehicles under the PremiumPLUS tier?</span></div>
+      <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)"><span class="ex-lender" style="background:var(--wbc-lt);color:var(--wbc-c)">Westpac</span><span class="ex-q">What is the DriveXpress maximum loan for a new client with residential property?</span></div>
+      <div class="welcome-ex" onclick="ask(this.querySelector('.ex-q').textContent)"><span class="ex-lender" style="background:var(--cfal-lt);color:var(--cfal-c)">Capital Finance</span><span class="ex-q">What documentation is required for a transaction between $500k and $1 million?</span></div>
+    </div>
+  </div>`;
+}
+// ── Update Chunks (upload → auto-draft → review diff → promote) ─────────────
+let currentDraft=null; // {draft_id, lender, chunks:[{chunk_id,is_new,draft_content,existing_content}]}
+
+function onChunkFileChosen(input){
+  const f=input.files&&input.files[0];
+  document.getElementById('chunk-filename').textContent=f?f.name:'';
+}
+
+function uploadAndDraft(){
+  const lender=document.getElementById('chunk-lender').value;
+  const fileInput=document.getElementById('chunk-file');
+  const file=fileInput.files&&fileInput.files[0];
+  const statusEl=document.getElementById('chunk-draft-status');
+  const btn=document.getElementById('btn-draft-chunks');
+  if(!file){statusEl.innerHTML='<div class="draft-error">Choose a PDF file first.</div>';return;}
+
+  currentDraft=null;
+  document.getElementById('chunk-draft-results').innerHTML='';
+  btn.disabled=true;
+  statusEl.innerHTML='<div class="draft-progress"><div class="spinner"></div>Reading the PDF and drafting chunks — this calls a vision model per page, so it can take 20–90 seconds…</div>';
+
+  const formData=new FormData();
+  formData.append('lender',lender);
+  formData.append('file',file);
+
+  fetch(API_BASE+'/chunks/draft',{method:'POST',headers:{'ngrok-skip-browser-warning':'true'},body:formData})
+    .then(async r=>{
+      if(!r.ok){const body=await r.json().catch(()=>({}));throw new Error(body.detail||('HTTP '+r.status));}
+      return r.json();
+    })
+    .then(data=>{
+      btn.disabled=false;
+      statusEl.innerHTML='';
+      currentDraft=data;
+      renderDraftResults(data);
+    })
+    .catch(err=>{
+      btn.disabled=false;
+      statusEl.innerHTML=`<div class="draft-error">Auto-chunking failed: ${esc(err.message||String(err))}. You can try again — nothing was changed.</div>`;
+    });
+}
+
+function renderDraftResults(data){
+  const box=document.getElementById('chunk-draft-results');
+  if(!data.chunks||!data.chunks.length){
+    box.innerHTML='<div class="chunks-empty">No chunks were drafted from this file.</div>';
+    return;
+  }
+  const warnings=data.warnings&&data.warnings.length
+    ? `<div class="draft-error">${data.warnings.map(w=>esc(w)).join('<br>')}</div>` : '';
+
+  const items=data.chunks.map((c,i)=>{
+    const newBadge=c.is_new?'<span class="tag tag-cached" style="margin-left:8px">New chunk</span>':'<span class="tag tag-pending" style="margin-left:8px">Updates existing</span>';
+    const diff=c.is_new
+      ? `<div class="chunk-diff single"><div class="chunk-diff-col"><div class="chunk-diff-lbl new">Drafted content</div><div class="chunk-diff-pre">${esc(c.draft_content)}</div></div></div>`
+      : `<div class="chunk-diff">
+          <div class="chunk-diff-col"><div class="chunk-diff-lbl old">Current (live)</div><div class="chunk-diff-pre">${esc(c.existing_content||'')}</div></div>
+          <div class="chunk-diff-col"><div class="chunk-diff-lbl new">Drafted (new)</div><div class="chunk-diff-pre">${esc(c.draft_content)}</div></div>
+        </div>`;
+    return `<div class="chunk-item" data-chunk-id="${esc(c.chunk_id)}">
+      <div class="chunk-item-head">
+        <label><input type="checkbox" class="chunk-select" data-chunk-id="${esc(c.chunk_id)}" onchange="updateChunkSelection()"><span class="chunk-id-label">${esc(c.chunk_id)}</span></label>
+        ${newBadge}
+      </div>
+      ${diff}
+    </div>`;
+  }).join('');
+
+  box.innerHTML = `
+    <div class="draft-summary">
+      <div><div class="draft-summary-title">${data.chunks.length} chunk${data.chunks.length!==1?'s':''} drafted from ${esc(data.source_filename)}</div><div class="draft-summary-sub">Nothing is selected yet. Read each chunk below against the live version, then tick the ones you want to make live.</div></div>
+      <div class="draft-actions">
+        <button class="btn" onclick="selectAllChunks(false)">Deselect all</button>
+        <button class="btn" onclick="selectAllChunks(true)">Select all</button>
+        <button class="btn btn-promote" id="btn-promote-chunks" onclick="promoteSelected()" disabled>Promote selected</button>
+      </div>
+    </div>
+    ${warnings}
+    ${items}
+    <div id="promote-result"></div>
+  `;
+}
+
+function selectAllChunks(checked){
+  document.querySelectorAll('.chunk-select').forEach(cb=>{cb.checked=checked;});
+  updateChunkSelection();
+}
+
+// Chunks start UNSELECTED. Promoting rewrites the live policy file the
+// assistant answers from, and this review step is the only thing standing
+// between a drafted chunk and production -- so the safe state has to be the
+// default, and selecting has to be the deliberate act. When every box
+// arrived pre-ticked, clicking "Promote selected" without scrolling shipped
+// every chunk, which quietly turned the review gate into a rubber stamp.
+// "Select all" is still there for someone who genuinely has read them all.
+function updateChunkSelection(){
+  const boxes=[...document.querySelectorAll('.chunk-select')];
+  const n=boxes.filter(cb=>cb.checked).length;
+  const btn=document.getElementById('btn-promote-chunks');
+  if(!btn)return;
+  btn.disabled=(n===0);
+  btn.textContent=n?`Promote ${n} of ${boxes.length}`:'Promote selected';
+}
+
+function promoteSelected(){
+  if(!currentDraft)return;
+  const selected=[...document.querySelectorAll('.chunk-select')].filter(cb=>cb.checked).map(cb=>cb.dataset.chunkId);
+  const resultEl=document.getElementById('promote-result');
+  const btn=document.getElementById('btn-promote-chunks');
+  if(!selected.length){resultEl.innerHTML='<div class="draft-error">Select at least one chunk to promote.</div>';return;}
+
+  btn.disabled=true;
+  resultEl.innerHTML='<div class="draft-progress"><div class="spinner"></div>Merging into the live chunk file and re-indexing — this takes ~30–40 seconds…</div>';
+
+  fetch(API_BASE+'/chunks/promote',{method:'POST',headers:{'Content-Type':'application/json','ngrok-skip-browser-warning':'true'},body:JSON.stringify({
+    draft_id:currentDraft.draft_id,lender:currentDraft.lender,chunk_ids:selected
+  })})
+    .then(async r=>{
+      if(!r.ok){const body=await r.json().catch(()=>({}));throw new Error(body.detail||('HTTP '+r.status));}
+      return r.json();
+    })
+    .then(data=>{
+      const alUpdates=(data.answer_library_updates||[]);
+      const alBlock=alUpdates.length
+        ? `<div class="al-update-note">Also refreshed ${alUpdates.length} saved answer${alUpdates.length!==1?'s':''} that depended on ${alUpdates.length!==1?'these':'this'} chunk${alUpdates.length!==1?'s':''}: ${alUpdates.map(u=>esc(u.question)+' → '+esc(u.status)).join('; ')}</div>`
+        : '';
+      resultEl.innerHTML=`<div class="promote-result">
+        <div class="promote-result-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:13px;height:13px"><polyline points="20 6 9 17 4 12"/></svg>Promoted ${data.promoted_chunk_ids.length} chunk${data.promoted_chunk_ids.length!==1?'s':''} — now live</div>
+        <div style="font-size:11.5px;color:var(--ink2)">${esc(data.lender)}'s chunk file now has ${data.total_chunks_in_file} chunks total; ${data.total_chunks_in_index} chunks in the live index.</div>
+        ${alBlock}
+      </div>`;
+      toast('Chunks promoted and live');
+      // Promoted chunks no longer need to be re-selectable — leave the diff
+      // visible for reference but stop offering to promote them again.
+      document.querySelectorAll('.chunk-select').forEach(cb=>{
+        if(selected.includes(cb.dataset.chunkId)){cb.checked=false;cb.disabled=true;}
+      });
+      // Recompute rather than blanket re-enabling: the promoted chunks were
+      // just unticked above, so with nothing left selected the button should
+      // stay disabled instead of inviting an empty second promote.
+      updateChunkSelection();
+    })
+    .catch(err=>{
+      // Selection is untouched by a failure, so this restores the button to
+      // whatever the current ticks warrant -- ready to retry.
+      updateChunkSelection();
+      resultEl.innerHTML=`<div class="draft-error">Promotion failed: ${esc(err.message||String(err))}. Nothing was changed — safe to try again.</div>`;
+    });
+}
+
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendQ();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ago(ts){const d=Date.now()-ts;if(d<60000)return'just now';if(d<3600000)return Math.floor(d/60000)+'m ago';if(d<86400000)return Math.floor(d/3600000)+'h ago';return Math.floor(d/86400000)+'d ago';}
+function toast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+updateAll();
+if(qaLender!=='ALL'){document.querySelectorAll('.lender-pill').forEach(b=>b.classList.toggle('active',b.dataset.l===qaLender));}
+</script>
+</body>
+</html>
