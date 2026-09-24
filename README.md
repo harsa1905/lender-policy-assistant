@@ -46,7 +46,9 @@ The interesting parts are the places where the standard approach was wrong for t
   goes live until someone approves it. A full audit found zero transcription errors.
 
 The full reasoning, including what was tried and reverted, is in
-[`docs/Technical_Documentation.md`](docs/Technical_Documentation.md).
+[`docs/Technical_Documentation.md`](docs/Technical_Documentation.md). For a shorter read, the
+case study [Retrieval Without a Cutoff](https://claude.ai/artifact/RXJ6uwkBPyEAGFKDHYpbtc)
+walks through the same decisions.
 
 ---
 
